@@ -12,6 +12,7 @@ const config: Webpack.Configuration = {
 
   output: {
     path: path.resolve(__dirname, './dist'),
+    filename: 'bundle.js',
     clean: true
   },
 
@@ -23,11 +24,16 @@ const config: Webpack.Configuration = {
     rules: [
       {
         test: /\.tsx?$/,
-        use: ['ts-loader']
+        use: ['ts-loader'],
+        exclude: /node_modules/
       },
       {
         test: /\.s?css$/,
         use: ['style-loader', 'css-loader']
+      },
+      {
+        test: /\.(png|jpg|jpeg|gif|svg|woff|woff2|eot|ttf|otf)$/,
+        type: 'asset/resource'
       }
     ]
   },
@@ -37,7 +43,17 @@ const config: Webpack.Configuration = {
       template: './public/index.html',
       favicon: './public/favicon.png'
     })
-  ]
+  ],
+
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'public')
+    },
+    compress: true,
+    port: 3000,
+    hot: true,
+    open: true
+  }
 }
 
 export default config

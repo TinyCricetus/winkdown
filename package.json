@@ -4,7 +4,8 @@
   "description": "",
   "private": "true",
   "scripts": {
-    "dev": "webpack server"
+    "dev": "webpack server",
+    "start": "tsx script/start.ts"
   },
   "keywords": [],
   "author": "",
@@ -27,6 +28,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "slate": "^0.101.5",
-    "slate-react": "^0.101.5"
+    "slate-react": "^0.101.5",
+    "tsx": "^4.19.2"
   }
 }
