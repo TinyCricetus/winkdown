@@ -1,7 +1,10 @@
 import React from 'react'
-import { RenderElementProps, useSlateStatic } from 'slate-react'
+import { RenderElementProps, useSlateStatic, ReactEditor } from 'slate-react'
 import { TableElement, TableCellElement } from './types'
 import { getColSpan, getRowSpan, getTableAbove } from './queries'
+import { getTableSelectionManager } from './selection'
+import { TableContextMenu } from './ContextMenu'
+import { insertTableRow, insertTableColumn, deleteRow, deleteColumn, mergeCells, splitCell, deleteTable } from './transforms'
 import './table.css'
 
 /**
@@ -20,7 +23,7 @@ export function Table(props: RenderElementProps) {
             <col key={index} style={{ width: `${width}px` }} />
           ))}
         </colgroup>
-        <tbody contentEditable={true}>{children}</tbody>
+        <tbody contentEditable={true} suppressContentEditableWarning={true}>{children}</tbody>
       </table>
     </div>
   )
@@ -67,10 +70,7 @@ export function TableCell(props: RenderElementProps) {
       : undefined,
   }
   
-  // 导入选区管理器和右键菜单
-  const { getTableSelectionManager } = require('./selection')
-  const { TableContextMenu } = require('./ContextMenu')
-  const { ReactEditor } = require('slate-react')
+  // TableSelectionManager, TableContextMenu 和 ReactEditor 已在文件顶部导入
   
   // 处理鼠标按下（开始框选）
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -209,7 +209,6 @@ export function TableToolbar() {
       <button
         onMouseDown={(e) => {
           e.preventDefault()
-          const { insertTableRow } = require('./transforms')
           insertTableRow(editor, { above: true })
         }}
         title="在上方插入行"
@@ -220,7 +219,6 @@ export function TableToolbar() {
       <button
         onMouseDown={(e) => {
           e.preventDefault()
-          const { insertTableRow } = require('./transforms')
           insertTableRow(editor, { above: false })
         }}
         title="在下方插入行"
@@ -231,7 +229,6 @@ export function TableToolbar() {
       <button
         onMouseDown={(e) => {
           e.preventDefault()
-          const { insertTableColumn } = require('./transforms')
           insertTableColumn(editor, { before: true })
         }}
         title="在左侧插入列"
@@ -242,7 +239,6 @@ export function TableToolbar() {
       <button
         onMouseDown={(e) => {
           e.preventDefault()
-          const { insertTableColumn } = require('./transforms')
           insertTableColumn(editor, { before: false })
         }}
         title="在右侧插入列"
@@ -253,7 +249,6 @@ export function TableToolbar() {
       <button
         onMouseDown={(e) => {
           e.preventDefault()
-          const { deleteRow } = require('./transforms')
           deleteRow(editor)
         }}
         title="删除行"
@@ -264,7 +259,6 @@ export function TableToolbar() {
       <button
         onMouseDown={(e) => {
           e.preventDefault()
-          const { deleteColumn } = require('./transforms')
           deleteColumn(editor)
         }}
         title="删除列"
@@ -275,7 +269,6 @@ export function TableToolbar() {
       <button
         onMouseDown={(e) => {
           e.preventDefault()
-          const { mergeCells } = require('./transforms')
           mergeCells(editor)
         }}
         title="合并单元格"
@@ -286,7 +279,6 @@ export function TableToolbar() {
       <button
         onMouseDown={(e) => {
           e.preventDefault()
-          const { splitCell } = require('./transforms')
           splitCell(editor)
         }}
         title="拆分单元格"
@@ -297,7 +289,6 @@ export function TableToolbar() {
       <button
         onMouseDown={(e) => {
           e.preventDefault()
-          const { deleteTable } = require('./transforms')
           deleteTable(editor)
         }}
         title="删除表格"
