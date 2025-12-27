@@ -38,13 +38,16 @@ yarn install
 ### 开发模式
 
 ```bash
+# 启动开发服务器
 pnpm dev
+# 或
+pnpm start
 ```
 
-### 构建
+### 生产构建
 
 ```bash
-pnpm start
+pnpm build
 ```
 
 ## 技术栈

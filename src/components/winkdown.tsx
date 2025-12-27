@@ -1,8 +1,9 @@
-import { useMemo, KeyboardEvent, useCallback } from 'react'
+import { useMemo, KeyboardEvent, useCallback, useState } from 'react'
 import './winkdown.css'
 import { Editable, RenderElementProps, RenderLeafProps, Slate, withReact, useSlateStatic, ReactEditor } from 'slate-react'
 import { Descendant, Editor, Element, Transforms, createEditor, Text, Range, Point, Node, Path } from 'slate'
 import { ListElement, HeadingElement, FormattedText } from '../constants'
+import { Table, TableRow, TableCell, TableToolbar, insertTable } from '../table'
 
 const initValue: Descendant[] = [
   {
@@ -62,6 +63,12 @@ function renderElement(props: RenderElementProps) {
       return <QuoteComponent {...props} />
     case 'code':
       return <CodeComponent {...props} />
+    case 'table':
+      return <Table {...props} />
+    case 'table-row':
+      return <TableRow {...props} />
+    case 'table-cell':
+      return <TableCell {...props} />
     default:
       return <ParagraphComponent {...props} />
   }
@@ -434,12 +441,30 @@ export function Winkdown() {
     }
   }, [editor, toggleFormat])
 
+  const [showTableButton, setShowTableButton] = useState(true)
+
   return (
     <div className="winkdown-container">
       <Slate
         editor={editor}
         initialValue={initValue}
       >
+        <div className="editor-toolbar">
+          {showTableButton && (
+            <button
+              className="insert-table-btn"
+              onMouseDown={(e) => {
+                e.preventDefault()
+                insertTable(editor, { rowCount: 3, colCount: 3 })
+              }}
+            >
+              📊 插入表格
+            </button>
+          )}
+        </div>
+        
+        <TableToolbar />
+        
         <Editable
           renderElement={renderElement}
           renderLeaf={renderLeaf}

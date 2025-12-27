@@ -29,3 +29,34 @@ export interface FormattedText extends BaseText {
   underline?: boolean
   code?: boolean
 }
+
+// 表格相关的接口
+export interface BorderStyle {
+  color?: string
+  size?: number
+  style?: 'solid' | 'dashed' | 'dotted'
+}
+
+export interface TableElement extends BaseElement {
+  type: 'table'
+  colSizes?: number[]
+  marginLeft?: number
+}
+
+export interface TableRowElement extends BaseElement {
+  type: 'table-row'
+  size?: number
+}
+
+export interface TableCellElement extends BaseElement {
+  type: 'table-cell'
+  colSpan?: number
+  rowSpan?: number
+  background?: string
+  borders?: {
+    top?: BorderStyle
+    right?: BorderStyle
+    bottom?: BorderStyle
+    left?: BorderStyle
+  }
+}

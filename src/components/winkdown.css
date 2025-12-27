@@ -179,3 +179,37 @@
 .winkdown-container::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+/* 编辑器工具栏 */
+.editor-toolbar {
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.insert-table-btn {
+  padding: 8px 20px;
+  border: none;
+  background: rgba(255, 255, 255, 0.95);
+  color: #667eea;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.insert-table-btn:hover {
+  background: white;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.insert-table-btn:active {
+  transform: translateY(0) scale(1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
