@@ -12,6 +12,19 @@ export class TableSelectionManager {
   private endCell: Path | null = null
   private editor: Editor | null = null
   
+  public get isSelectingMode() {
+    return this.isSelecting
+  }
+
+  public setStartCell(path: Path) {
+      this.startCell = path
+  }
+
+  public getStartCell() {
+      return this.startCell
+  }
+  
+  
   /**
    * 开始框选
    */

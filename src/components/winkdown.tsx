@@ -3,7 +3,7 @@ import './winkdown.css'
 import { Editable, RenderElementProps, RenderLeafProps, Slate, withReact, useSlateStatic, ReactEditor } from 'slate-react'
 import { Descendant, Editor, Element, Transforms, createEditor, Text, Range, Point, Node, Path } from 'slate'
 import { ListElement, HeadingElement, FormattedText } from '../constants'
-import { Table, TableRow, TableCell, TableToolbar, insertTable } from '../table'
+import { Table, TableRow, TableCell, TableToolbar, insertTable, withTable } from '../table'
 
 const initValue: Descendant[] = [
   {
@@ -189,7 +189,7 @@ function CodeComponent(props: RenderElementProps) {
 }
 
 export function Winkdown() {
-  const editor = useMemo(() => withReact(createEditor()), [])
+  const editor = useMemo(() => withTable(withReact(createEditor())), [])
 
   const toggleFormat = useCallback((format: 'bold' | 'italic' | 'underline' | 'code') => {
     const isActive = isFormatActive(editor, format)

@@ -1,10 +1,20 @@
 import React from 'react'
-import { RenderElementProps, useSlateStatic, ReactEditor } from 'slate-react'
+import { RenderElementProps, useSlateStatic, useSlate, ReactEditor } from 'slate-react'
+import { Path } from 'slate'
 import { TableElement, TableCellElement } from './types'
 import { getColSpan, getRowSpan, getTableAbove } from './queries'
 import { getTableSelectionManager } from './selection'
 import { TableContextMenu } from './context-menu'
 import { insertTableRow, insertTableColumn, deleteRow, deleteColumn, mergeCells, splitCell, deleteTable } from './transforms'
+import {
+  ArrowUp,
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  Trash2,
+  Merge,
+  Split, X
+} from 'lucide-react'
 import './table.css'
 
 /**
@@ -16,7 +26,7 @@ export function Table(props: RenderElementProps) {
   const colSizes = table.colSizes || []
   
   return (
-    <div {...attributes} contentEditable={false} style={{ margin: '20px 0' }}>
+    <div {...attributes} contentEditable={false} className="slate-table-wrapper">
       <table className="slate-table">
         <colgroup>
           {colSizes.map((width, index) => (
@@ -84,6 +94,10 @@ export function TableCell(props: RenderElementProps) {
     if (e.shiftKey || e.ctrlKey) {
       e.preventDefault()
       selectionManager.startSelection(editor, path)
+    } else {
+      // 记录起始单元格，准备可能的拖拽框选
+      selectionManager.clearSelection()
+      selectionManager.setStartCell(path)
     }
   }
   
@@ -94,7 +108,20 @@ export function TableCell(props: RenderElementProps) {
     // 只在按住鼠标左键时更新选区
     if (e.buttons === 1) {
       const path = ReactEditor.findPath(editor, element)
-      selectionManager.updateSelection(path)
+      
+      if (selectionManager.isSelectingMode) {
+        selectionManager.updateSelection(path)
+      } else {
+        // 检查是否从另一个单元格拖拽进入
+        const startCell = selectionManager.getStartCell()
+        if (startCell && !Path.equals(startCell, path)) {
+           // 清除浏览器原生选区
+           window.getSelection()?.removeAllRanges()
+           // 触发框选模式
+           selectionManager.startSelection(editor, startCell)
+           selectionManager.updateSelection(path)
+        }
+      }
     }
   }
   
@@ -152,139 +179,265 @@ export function TableCell(props: RenderElementProps) {
 /**
  * 表格工具栏组件（简化版）
  */
+/**
+ * 表格工具栏（悬浮式）
+ */
 export function TableToolbar() {
-  const editor = useSlateStatic()
-  const [isInTable, setIsInTable] = React.useState(false)
-  const [showFullToolbar, setShowFullToolbar] = React.useState(false)
+  const editor = useSlate()
+  const tableEntry = getTableAbove(editor)
+  const ref = React.useRef<HTMLDivElement>(null)
+  const [position, setPosition] = React.useState<{ top: number; left: number } | null>(null)
   
-  React.useEffect(() => {
-    const checkIfInTable = () => {
-      const table = getTableAbove(editor)
-      setIsInTable(!!table)
+  React.useLayoutEffect(() => {
+    if (!tableEntry) {
+      setPosition(null)
+      return
+    }
+
+    const [tableNode] = tableEntry
+    let animationFrameId: number
+
+    const updatePosition = () => {
+      try {
+        const tableDom = ReactEditor.toDOMNode(editor as ReactEditor, tableNode)
+        const containerDom = tableDom.closest('.winkdown-container') || document.documentElement // Fallback
+        
+        if (tableDom && containerDom && ref.current) {
+          const tableRect = tableDom.getBoundingClientRect()
+          
+          // Use window/documentElement if fallback
+          const isWindow = containerDom === document.documentElement
+          const containerRect = isWindow 
+            ? { top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight, width: window.innerWidth, height: window.innerHeight }
+            : containerDom.getBoundingClientRect()
+            
+          const toolbarRect = ref.current.getBoundingClientRect()
+          
+          // Calculate intersection between table and viewport/container to find "Visible Table Area"
+          const intersectionLeft = Math.max(tableRect.left, containerRect.left)
+          const intersectionRight = Math.min(tableRect.right, containerRect.right)
+          
+          // If not visible at all
+          if (intersectionLeft >= intersectionRight) {
+             // Optional: Hide or keep at closest edge? simpler to just keep at center of table or hide.
+             // Let's hide if completely out of view? Or just fallback to table center.
+             // For better UX, let's keep it calculated but it might be clipped.
+             // Actually, if it's out of view, the user can't see the table anyway.
+          }
+          
+          // Center the toolbar over the VISIBLE portion of the table
+          const visibleCenter = (intersectionLeft + intersectionRight) / 2
+          
+          // Convert Client Coordinate (visibleCenter) to Container-Relative Coordinate
+          // If container is window/body, scroll is window.scrollX
+          const scrollLeft = isWindow ? window.scrollX : containerDom.scrollLeft
+          const scrollTop = isWindow ? window.scrollY : containerDom.scrollTop
+          const containerClientLeft = isWindow ? 0 : containerRect.left
+          const containerClientTop = isWindow ? 0 : containerRect.top
+
+          let toolLeft = visibleCenter - (toolbarRect.width / 2)
+          
+          // Clamp logic: Don't let the toolbar go beyond the table's actual edges (minus safety margin)
+          // Client coordinates comparison
+          const maxToolLeft = tableRect.right - toolbarRect.width
+          const minToolLeft = tableRect.left
+          
+          // Apply clamping to the client coordinate
+          toolLeft = Math.max(minToolLeft, Math.min(toolLeft, maxToolLeft))
+
+          // Convert to relative style position
+          const finalLeft = toolLeft - containerClientLeft + scrollLeft
+          
+          // Calculate Top (Always above table, or below if clipped top)
+          // Default: Above
+          let toolTopClient = tableRect.top - toolbarRect.height - 8
+          
+          // If top is clipped by container top
+          if (toolTopClient < containerRect.top + 40) { // 40px buffer usually for header
+             // Flip to bottom? Or stick to top of view?
+             // Let's Flip to Bottom of table usually, or just top of visible area?
+             // "Below the first row" is sometimes better.
+             // Simple logic: If header is cut off, show below table?
+             // Let's stick to: If above is cut off, place inside top of table? No that covers content.
+             // Place below table?
+             // Let's try: Place below table node if top is tight? 
+             // Or fixed to top of view?
+             // Let's use the provided logic: move to bottom if top is clipped.
+             if (tableRect.top < containerRect.top) {
+                 // Table is scrolled up.
+                 // We want the toolbar to be accessible.
+                 // Sticky Header style: Place it at containerRect.top + padding
+                 toolTopClient = Math.max(toolTopClient, containerRect.top + 5)
+                 // But don't go past the bottom of the table
+                 toolTopClient = Math.min(toolTopClient, tableRect.bottom - toolbarRect.height - 5)
+             }
+          }
+          
+          const finalTop = toolTopClient - containerClientTop + scrollTop
+
+          setPosition({ top: finalTop, left: finalLeft })
+        }
+      } catch (e) {
+        // Ignore errors
+      }
+    }
+
+    const onScroll = () => {
+      cancelAnimationFrame(animationFrameId)
+      animationFrameId = requestAnimationFrame(updatePosition)
+    }
+
+    // Initial update
+    updatePosition()
+
+    // Add listeners
+    window.addEventListener('resize', onScroll)
+    
+    let scrollContainer: Element | Window = window
+    
+    try {
+      // Try to find the specific container to attach scroll listener
+      // This might throw if the table hasn't been fully mounted yet
+      const tableDom = ReactEditor.toDOMNode(editor as ReactEditor, tableNode)
+      const containerDom = tableDom.closest('.winkdown-container')
+      if (containerDom) {
+        scrollContainer = containerDom
+      }
+    } catch (e) {
+      // If table DOM not found, we fallback to window (already set) or just ignore
     }
     
-    checkIfInTable()
-    
-    // 监听选区变化
-    const interval = setInterval(checkIfInTable, 100)
-    return () => clearInterval(interval)
-  }, [editor])
-  
-  if (!isInTable) return null
-  
-  // 简化工具栏，只显示提示和快速操作
-  if (!showFullToolbar) {
-    return (
-      <div className="table-toolbar table-toolbar-compact">
-        <div className="toolbar-hint">
-          💡 <strong>提示：</strong>右键单元格打开菜单，按住 <kbd>Shift</kbd> 或 <kbd>Ctrl</kbd> 拖拽鼠标框选多个单元格
-        </div>
+    scrollContainer.addEventListener('scroll', onScroll, { passive: true })
+
+    return () => {
+      cancelAnimationFrame(animationFrameId)
+      window.removeEventListener('resize', onScroll)
+      scrollContainer.removeEventListener('scroll', onScroll)
+    }
+  }, [editor, tableEntry]) // Re-run when selection or table changes
+
+  if (!tableEntry) return null
+
+  return (
+    <div 
+      ref={ref}
+      className="table-toolbar"
+      style={{
+        top: position ? `${position.top}px` : '-9999px',
+        left: position ? `${position.left}px` : '-9999px',
+        visibility: position ? 'visible' : 'hidden',
+        opacity: position ? 1 : 0
+      }}
+    >
+      <div className="toolbar-group">
         <button
-          className="toolbar-toggle"
           onMouseDown={(e) => {
             e.preventDefault()
-            setShowFullToolbar(true)
+            insertTableRow(editor, { above: true })
           }}
-          title="显示完整工具栏"
+          title="在上方插入行"
+          className="toolbar-btn"
         >
-          ⚙ 显示工具栏
+          <ArrowUp size={16} />
+        </button>
+        
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            insertTableRow(editor, { above: false })
+          }}
+          title="在下方插入行"
+          className="toolbar-btn"
+        >
+          <ArrowDown size={16} />
         </button>
       </div>
-    )
-  }
-  
-  return (
-    <div className="table-toolbar">
-      <button
-        className="toolbar-toggle"
-        onMouseDown={(e) => {
-          e.preventDefault()
-          setShowFullToolbar(false)
-        }}
-        title="隐藏工具栏"
-      >
-        ✕
-      </button>
+
+      <div className="separator" />
+
+      <div className="toolbar-group">
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            insertTableColumn(editor, { before: true })
+          }}
+          title="在左侧插入列"
+          className="toolbar-btn"
+        >
+          <ArrowLeft size={16} />
+        </button>
+        
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            insertTableColumn(editor, { before: false })
+          }}
+          title="在右侧插入列"
+          className="toolbar-btn"
+        >
+          <ArrowRight size={16} />
+        </button>
+      </div>
+
+      <div className="separator" />
       
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault()
-          insertTableRow(editor, { above: true })
-        }}
-        title="在上方插入行"
-      >
-        ↑ 插入行
-      </button>
+      <div className="toolbar-group">
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            deleteRow(editor)
+          }}
+          title="删除行"
+          className="toolbar-btn danger-hover"
+        >
+          <div className="icon-stack">
+            <span style={{ fontSize: 10, fontWeight: 700 }}>Row</span>
+            <X size={14} className="overlay-icon" />
+          </div>
+        </button>
+        
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            deleteColumn(editor)
+          }}
+          title="删除列"
+          className="toolbar-btn danger-hover"
+        >
+          <div className="icon-stack">
+            <span style={{ fontSize: 10, fontWeight: 700 }}>Col</span>
+            <X size={14} className="overlay-icon" />
+          </div>
+        </button>
+      </div>
+
+      <div className="separator" />
       
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault()
-          insertTableRow(editor, { above: false })
-        }}
-        title="在下方插入行"
-      >
-        ↓ 插入行
-      </button>
-      
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault()
-          insertTableColumn(editor, { before: true })
-        }}
-        title="在左侧插入列"
-      >
-        ← 插入列
-      </button>
-      
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault()
-          insertTableColumn(editor, { before: false })
-        }}
-        title="在右侧插入列"
-      >
-        → 插入列
-      </button>
-      
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault()
-          deleteRow(editor)
-        }}
-        title="删除行"
-      >
-        删除行
-      </button>
-      
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault()
-          deleteColumn(editor)
-        }}
-        title="删除列"
-      >
-        删除列
-      </button>
-      
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault()
-          mergeCells(editor)
-        }}
-        title="合并单元格"
-      >
-        合并单元格
-      </button>
-      
-      <button
-        onMouseDown={(e) => {
-          e.preventDefault()
-          splitCell(editor)
-        }}
-        title="拆分单元格"
-      >
-        拆分单元格
-      </button>
+      <div className="toolbar-group">
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            mergeCells(editor)
+          }}
+          title="合并单元格"
+          className="toolbar-btn"
+        >
+          <Merge size={16} />
+        </button>
+        
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            splitCell(editor)
+          }}
+          title="拆分单元格"
+          className="toolbar-btn"
+        >
+          <Split size={16} />
+        </button>
+      </div>
+
+      <div className="separator" />
       
       <button
         onMouseDown={(e) => {
@@ -292,9 +445,9 @@ export function TableToolbar() {
           deleteTable(editor)
         }}
         title="删除表格"
-        style={{ marginLeft: 'auto', background: '#ff4444', color: 'white' }}
+        className="toolbar-btn danger"
       >
-        删除表格
+        <Trash2 size={16} />
       </button>
     </div>
   )
