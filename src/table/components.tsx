@@ -3,7 +3,7 @@ import { RenderElementProps, useSlateStatic, ReactEditor } from 'slate-react'
 import { TableElement, TableCellElement } from './types'
 import { getColSpan, getRowSpan, getTableAbove } from './queries'
 import { getTableSelectionManager } from './selection'
-import { TableContextMenu } from './ContextMenu'
+import { TableContextMenu } from './context-menu'
 import { insertTableRow, insertTableColumn, deleteRow, deleteColumn, mergeCells, splitCell, deleteTable } from './transforms'
 import './table.css'
 

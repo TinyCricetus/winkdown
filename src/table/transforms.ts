@@ -1,6 +1,7 @@
 import { Editor, Element, Transforms, Path } from 'slate'
 import { TableElement, TableRowElement, TableCellElement, InsertTableOptions } from './types'
 import { getTableAbove, getCellAbove, getRowAbove, getColSpan, getRowSpan, getTableColumnCount } from './queries'
+import { getTableSelectionManager } from './selection'
 
 /**
  * 创建一个空单元格
@@ -195,7 +196,6 @@ export function deleteColumn(editor: Editor) {
  */
 export function mergeCells(editor: Editor) {
   // 首先尝试从选区管理器获取选中的单元格
-  const { getTableSelectionManager } = require('./selection')
   const selectionManager = getTableSelectionManager()
   
   let cellPaths: Path[] = []

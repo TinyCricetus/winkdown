@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useSlateStatic } from 'slate-react'
 import { getTableSelectionManager } from './selection'
+import { mergeCells, splitCell, insertTableRow, deleteRow, insertTableColumn, deleteColumn, deleteTable } from './transforms'
 import './context-menu.css'
 
 interface ContextMenuProps {
@@ -65,7 +66,6 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
           onMouseDown={(e) => {
             e.preventDefault()
             handleAction(() => {
-              const { mergeCells } = require('./transforms')
               mergeCells(editor)
             })
           }}
@@ -80,7 +80,6 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
           onMouseDown={(e) => {
             e.preventDefault()
             handleAction(() => {
-              const { splitCell } = require('./transforms')
               splitCell(editor)
             })
           }}
@@ -100,7 +99,6 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
           onMouseDown={(e) => {
             e.preventDefault()
             handleAction(() => {
-              const { insertTableRow } = require('./transforms')
               insertTableRow(editor, { above: true })
             })
           }}
@@ -114,7 +112,6 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
           onMouseDown={(e) => {
             e.preventDefault()
             handleAction(() => {
-              const { insertTableRow } = require('./transforms')
               insertTableRow(editor, { above: false })
             })
           }}
@@ -128,7 +125,6 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
           onMouseDown={(e) => {
             e.preventDefault()
             handleAction(() => {
-              const { deleteRow } = require('./transforms')
               deleteRow(editor)
             })
           }}
@@ -148,7 +144,6 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
           onMouseDown={(e) => {
             e.preventDefault()
             handleAction(() => {
-              const { insertTableColumn } = require('./transforms')
               insertTableColumn(editor, { before: true })
             })
           }}
@@ -162,7 +157,6 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
           onMouseDown={(e) => {
             e.preventDefault()
             handleAction(() => {
-              const { insertTableColumn } = require('./transforms')
               insertTableColumn(editor, { before: false })
             })
           }}
@@ -176,7 +170,6 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
           onMouseDown={(e) => {
             e.preventDefault()
             handleAction(() => {
-              const { deleteColumn } = require('./transforms')
               deleteColumn(editor)
             })
           }}
@@ -196,7 +189,6 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
             e.preventDefault()
             if (confirm('确定要删除整个表格吗？')) {
               handleAction(() => {
-                const { deleteTable } = require('./transforms')
                 deleteTable(editor)
               })
             }

@@ -283,7 +283,7 @@ export function example11CreateMergedCellTable() {
  * 2. 在需要的地方调用它们
  * 3. 例如：
  * 
- *    import { example1InsertTable } from './examples/tableExamples'
+ *    import { example1InsertTable } from './examples/table-examples'
  * 
  *    <button onClick={() => example1InsertTable(editor)}>
  *      插入表格

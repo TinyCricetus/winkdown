@@ -20,6 +20,9 @@
 - **Functional Paradigm**: Prefer pure functions.
 - **Clean Code**: Keep functions small.
 
+### File Naming
+- **Convention**: Use **kebab-case** (lowercase with hyphens) for all filenames (e.g., `context-menu.tsx`, `table-examples.ts`).
+
 ### TypeScript
 - **No Any**: Avoid `any`.
 - **Slate Custom Types**: Ensure custom nodes are strictly typed.
