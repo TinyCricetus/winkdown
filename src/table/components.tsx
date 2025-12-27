@@ -5,15 +5,19 @@ import { TableElement, TableCellElement } from './types'
 import { getColSpan, getRowSpan, getTableAbove } from './queries'
 import { getTableSelectionManager } from './selection'
 import { TableContextMenu } from './context-menu'
-import { insertTableRow, insertTableColumn, deleteRow, deleteColumn, mergeCells, splitCell, deleteTable } from './transforms'
+import { insertTableRow, insertTableColumn, deleteRow, deleteColumn, mergeCells, splitCell, deleteTable, setCellAlign } from './transforms'
 import {
-  ArrowUp,
-  ArrowDown,
-  ArrowLeft,
-  ArrowRight,
-  Trash2,
-  Merge,
-  Split, X
+    ArrowUp,
+    ArrowDown,
+    ArrowLeft,
+    ArrowRight,
+    Trash2,
+    Merge,
+    Split,
+    X,
+    AlignLeft,
+    AlignCenter,
+    AlignRight
 } from 'lucide-react'
 import './table.css'
 
@@ -66,6 +70,7 @@ export function TableCell(props: RenderElementProps) {
   
   const style: React.CSSProperties = {
     background: cell.background,
+    textAlign: cell.align || 'left',
     borderTop: cell.borders?.top?.size 
       ? `${cell.borders.top.size}px ${cell.borders.top.style || 'solid'} ${cell.borders.top.color || '#ddd'}` 
       : undefined,
@@ -434,6 +439,44 @@ export function TableToolbar() {
           className="toolbar-btn"
         >
           <Split size={16} />
+        </button>
+      </div>
+
+      <div className="separator" />
+      
+      {/* 对齐按钮 */}
+      <div className="toolbar-group">
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            setCellAlign(editor, 'left')
+          }}
+          title="左对齐"
+          className="toolbar-btn"
+        >
+          <AlignLeft size={16} />
+        </button>
+        
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            setCellAlign(editor, 'center')
+          }}
+          title="居中对齐"
+          className="toolbar-btn"
+        >
+          <AlignCenter size={16} />
+        </button>
+        
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            setCellAlign(editor, 'right')
+          }}
+          title="右对齐"
+          className="toolbar-btn"
+        >
+          <AlignRight size={16} />
         </button>
       </div>
 

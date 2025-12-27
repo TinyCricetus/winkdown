@@ -1,16 +1,54 @@
+/* ===== CSS 变量系统 ===== */
+:root {
+  /* 主题色 */
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --primary-color: #667eea;
+  --primary-dark: #764ba2;
+  
+  /* 文本色 */
+  --text-primary: #1a1a2e;
+  --text-secondary: #4a4a6a;
+  --text-muted: #8888a0;
+  
+  /* 背景色 */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fc;
+  --bg-tertiary: #f0f2f8;
+  
+  /* 边框色 */
+  --border-light: #e8eaf0;
+  --border-medium: #dde0e8;
+  
+  /* 功能色 */
+  --color-code: #e83e8c;
+  --color-quote: #667eea;
+  --color-selection: #c7d2fe;
+  
+  /* 阴影 */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+  
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+}
+
+/* ===== 容器 ===== */
 .winkdown-container {
   position: relative;
   width: 1000px;
   max-width: 90vw;
   min-height: 500px;
   max-height: 80vh;
-  border: solid 2px #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
   margin: 20px auto;
   overflow-x: hidden;
   overflow-y: auto;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  background: white;
+  box-shadow: var(--shadow-lg);
+  background: var(--bg-primary);
 }
 
 @font-face {
@@ -18,81 +56,95 @@
   src: url(../assets/fonts/Monaco-1.ttf);
 }
 
+/* ===== 编辑器主体 ===== */
 .winkdown {
-  background-color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', 'Monaco', 'Courier New', Courier, monospace;
+  background-color: var(--bg-primary);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
   outline: none;
-  padding: 20px;
-  line-height: 1.6;
-  color: #333;
+  padding: 24px 28px;
+  line-height: 1.7;
+  color: var(--text-primary);
   font-size: 16px;
+  min-height: 300px;
 }
 
 .winkdown [data-slate-placeholder] {
-  color: #999;
-  opacity: 0.5;
+  color: var(--text-muted);
+  opacity: 0.6;
   pointer-events: none;
   position: absolute;
+  font-style: italic;
 }
 
-/* 段落样式 */
+/* ===== 段落 ===== */
 .paragraph {
-  margin: 8px 0;
-  min-height: 1.5em;
+  margin: 10px 0;
+  min-height: 1.6em;
 }
 
-/* 标题样式 */
+/* ===== 标题 ===== */
 .heading {
-  font-weight: 600;
-  margin: 16px 0 8px 0;
+  font-weight: 700;
+  margin: 24px 0 12px 0;
   line-height: 1.3;
+  color: var(--text-primary);
 }
 
 .heading-1 {
-  font-size: 2em;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 8px;
+  font-size: 2.2em;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  padding-bottom: 12px;
+  border-bottom: 3px solid;
+  border-image: var(--primary-gradient) 1;
 }
 
 .heading-2 {
-  font-size: 1.5em;
-  border-bottom: 1px solid #e0e0e0;
-  padding-bottom: 6px;
+  font-size: 1.7em;
+  color: var(--primary-color);
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--border-medium);
 }
 
 .heading-3 {
-  font-size: 1.25em;
+  font-size: 1.4em;
+  color: var(--text-primary);
 }
 
 .heading-4 {
-  font-size: 1.1em;
+  font-size: 1.2em;
 }
 
 .heading-5 {
-  font-size: 1em;
+  font-size: 1.05em;
 }
 
 .heading-6 {
-  font-size: 0.9em;
-  color: #666;
+  font-size: 0.95em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-/* 列表样式 */
+/* ===== 列表 ===== */
 .list-item {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  margin: 4px 0;
-  min-height: 1.5em;
+  margin: 6px 0;
+  min-height: 1.6em;
 }
 
 .list-marker {
-  min-width: 24px;
+  min-width: 28px;
   text-align: right;
-  margin-right: 8px;
-  color: #666;
+  margin-right: 10px;
+  color: var(--primary-color);
   user-select: none;
   flex-shrink: 0;
+  font-weight: 600;
 }
 
 .list-content {
@@ -100,117 +152,130 @@
 }
 
 .list-item.order-list .list-marker {
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .list-item.bullet-list .list-marker {
-  font-size: 1.2em;
+  font-size: 1.3em;
+  line-height: 1;
+  color: var(--primary-dark);
+}
+
+/* ===== 引用块 ===== */
+.quote {
+  position: relative;
+  margin: 16px 0;
+  padding: 16px 20px 16px 24px;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.08) 0%, rgba(118, 75, 162, 0.05) 100%);
+  border-left: 4px solid;
+  border-image: var(--primary-gradient) 1;
+  border-radius: 0 var(--radius-md) var(--radius-md) 0;
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.quote::before {
+  content: '"';
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  font-size: 32px;
+  font-family: Georgia, serif;
+  color: var(--primary-color);
+  opacity: 0.3;
   line-height: 1;
 }
 
-/* 引用样式 */
-.quote {
-  border-left: 4px solid #ddd;
-  padding-left: 16px;
-  margin: 12px 0;
-  color: #666;
-  font-style: italic;
-  background: #f9f9f9;
-  padding: 12px 16px;
-  border-radius: 4px;
+/* ===== 代码块 ===== */
+.code-block {
+  position: relative;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-md);
+  margin: 16px 0;
+  overflow: hidden;
 }
 
-/* 代码块样式 */
-.code-block {
-  background: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 12px;
-  margin: 12px 0;
-  overflow-x: auto;
-  font-family: 'Monaco', 'Courier New', Courier, monospace;
-  font-size: 14px;
-  line-height: 1.5;
+.code-block::before {
+  content: 'Code';
+  display: block;
+  padding: 8px 16px;
+  background: var(--primary-gradient);
+  color: white;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .code-block code {
+  display: block;
+  padding: 16px;
   background: transparent;
-  padding: 0;
   border: none;
-  font-size: inherit;
+  font-family: 'Monaco', 'Fira Code', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  overflow-x: auto;
 }
 
-/* 行内代码样式 */
+/* ===== 行内代码 ===== */
 .inline-code {
-  background: #f5f5f5;
-  border: 1px solid #e0e0e0;
-  border-radius: 3px;
-  padding: 2px 6px;
-  font-family: 'Monaco', 'Courier New', Courier, monospace;
-  font-size: 0.9em;
-  color: #d63384;
+  background: linear-gradient(135deg, rgba(232, 62, 140, 0.1) 0%, rgba(102, 126, 234, 0.1) 100%);
+  border: 1px solid rgba(232, 62, 140, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 2px 8px;
+  font-family: 'Monaco', 'Fira Code', 'Consolas', monospace;
+  font-size: 0.88em;
+  color: var(--color-code);
+  font-weight: 500;
 }
 
-/* 选中状态 */
+/* ===== 选中状态 ===== */
 .winkdown ::selection {
-  background: #b3d4fc;
+  background: var(--color-selection);
 }
 
-/* 焦点状态 */
+/* ===== 焦点状态 ===== */
 .winkdown:focus {
   outline: none;
 }
 
-/* 滚动条样式 */
+/* ===== 滚动条 ===== */
 .winkdown-container::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 .winkdown-container::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-sm);
 }
 
 .winkdown-container::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
+  background: linear-gradient(180deg, #c1c1d1 0%, #a8a8b8 100%);
+  border-radius: var(--radius-sm);
 }
 
 .winkdown-container::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: linear-gradient(180deg, #a8a8b8 0%, #909098 100%);
 }
 
-/* 编辑器工具栏 */
-.editor-toolbar {
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-bottom: 2px solid rgba(102, 126, 234, 0.3);
-  display: flex;
-  gap: 12px;
-  align-items: center;
+/* ===== 响应式 ===== */
+@media (max-width: 768px) {
+  .winkdown {
+    padding: 16px 20px;
+    font-size: 15px;
+  }
+  
+  .heading-1 {
+    font-size: 1.8em;
+  }
+  
+  .heading-2 {
+    font-size: 1.4em;
+  }
 }
 
-.insert-table-btn {
-  padding: 8px 20px;
-  border: none;
-  background: rgba(255, 255, 255, 0.95);
-  color: #667eea;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-.insert-table-btn:hover {
-  background: white;
-  transform: translateY(-2px) scale(1.05);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-}
-
-.insert-table-btn:active {
-  transform: translateY(0) scale(1);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
+/* 注意: 工具栏样式已移至 toolbar.css */

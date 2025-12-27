@@ -25,6 +25,7 @@ export interface TableCellElement extends BaseElement {
   type: 'table-cell'
   colSpan?: number       // 列合并数
   rowSpan?: number       // 行合并数
+  align?: 'left' | 'center' | 'right'  // 文本对齐
   background?: string    // 背景色
   borders?: {
     top?: BorderStyle

@@ -351,3 +351,29 @@ export function setColumnWidth(editor: Editor, columnIndex: number, width: numbe
     )
   }
 }
+
+/**
+ * 设置单元格对齐方式
+ */
+export function setCellAlign(editor: Editor, align: 'left' | 'center' | 'right') {
+  const selectionManager = getTableSelectionManager()
+  
+  let cellPaths: Path[] = []
+  
+  if (selectionManager.hasSelection()) {
+    cellPaths = selectionManager.getSelectedCells()
+  } else {
+    const cell = getCellAbove(editor)
+    if (cell) {
+      cellPaths = [cell[1]]
+    }
+  }
+  
+  for (const cellPath of cellPaths) {
+    Transforms.setNodes(
+      editor,
+      { align } as Partial<TableCellElement>,
+      { at: cellPath }
+    )
+  }
+}

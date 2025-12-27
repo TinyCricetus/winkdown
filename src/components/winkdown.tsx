@@ -1,9 +1,12 @@
-import { useMemo, KeyboardEvent, useCallback, useState } from 'react'
+import { useMemo, KeyboardEvent, useCallback } from 'react'
 import './winkdown.css'
 import { Editable, RenderElementProps, RenderLeafProps, Slate, withReact, useSlateStatic, ReactEditor } from 'slate-react'
 import { Descendant, Editor, Element, Transforms, createEditor, Text, Range, Point, Node, Path } from 'slate'
+import { withHistory } from 'slate-history'
 import { ListElement, HeadingElement, FormattedText } from '../constants'
-import { Table, TableRow, TableCell, TableToolbar, insertTable, withTable } from '../table'
+import { Table, TableRow, TableCell, TableToolbar, withTable } from '../table'
+import { EditorToolbar } from './toolbar'
+import { EditorStatusBar } from './status-bar'
 
 const initValue: Descendant[] = [
   {
@@ -189,7 +192,7 @@ function CodeComponent(props: RenderElementProps) {
 }
 
 export function Winkdown() {
-  const editor = useMemo(() => withTable(withReact(createEditor())), [])
+  const editor = useMemo(() => withTable(withHistory(withReact(createEditor()))), [])
 
   const toggleFormat = useCallback((format: 'bold' | 'italic' | 'underline' | 'code') => {
     const isActive = isFormatActive(editor, format)
@@ -441,27 +444,13 @@ export function Winkdown() {
     }
   }, [editor, toggleFormat])
 
-  const [showTableButton, setShowTableButton] = useState(true)
-
   return (
     <div className="winkdown-container">
       <Slate
         editor={editor}
         initialValue={initValue}
       >
-        <div className="editor-toolbar">
-          {showTableButton && (
-            <button
-              className="insert-table-btn"
-              onMouseDown={(e) => {
-                e.preventDefault()
-                insertTable(editor, { rowCount: 3, colCount: 3 })
-              }}
-            >
-              📊 插入表格
-            </button>
-          )}
-        </div>
+        <EditorToolbar />
         
         <TableToolbar />
         
@@ -470,8 +459,10 @@ export function Winkdown() {
           renderLeaf={renderLeaf}
           className='winkdown'
           onKeyDown={onKeyDown}
-          placeholder="开始输入... (Ctrl+Space 触发 Markdown 快捷键)"
+          placeholder="开始输入... 使用 # 创建标题，> 创建引用，1. 创建列表"
         />
+        
+        <EditorStatusBar />
       </Slate>
     </div>
   )
