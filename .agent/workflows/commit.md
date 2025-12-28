@@ -1,32 +1,48 @@
 ---
-description: Create a compliant code commit using Angular Conventional Commits
+description: 使用 Angular Conventional Commits 规范创建代码提交
 ---
 
-# Commit Workflow
+# 提交工作流
 
-1. Check current status
+**重要：所有提交信息必须使用中文编写！**
+
+1. 检查当前状态
 // turbo
 git status
 
-2. Stage files (User Action Required)
-   - Review the files listed above.
-   - Run `git add <files>` for the changes you want to include.
+2. 暂存文件（需要用户操作）
+   - 检查上面列出的文件。
+   - 运行 `git add <files>` 添加你想要提交的更改。
 
-3. Determine Commit Type
-   - **feat**: A new feature
-   - **fix**: A bug fix
-   - **docs**: Documentation only changes
-   - **style**: formatting
-   - **refactor**: code change that neither fixes a bug nor adds a feature
-   - **perf**: improves performance
-   - **test**: adding missing tests
-   - **chore**: build/auxiliary tools
+3. 确定提交类型
+   - **feat**: 新功能
+   - **fix**: 修复 bug
+   - **docs**: 仅文档更改
+   - **style**: 格式化（不影响代码运行的更改）
+   - **refactor**: 重构（既不是新功能也不是 bug 修复的代码更改）
+   - **perf**: 性能优化
+   - **test**: 添加缺失的测试
+   - **chore**: 构建/辅助工具相关
 
-4. Craft Commit Message
-   - Format: `type(scope): subject`
-   - Example: `fix(table): resolve cell merging index error`
-   - **Scope** is optional but recommended (e.g., `table`, `toolbar`).
+4. 编写提交信息（使用中文）
+   - 格式：`type(scope): 主题描述`
+   - 示例：`fix(table): 修复单元格合并索引错误`
+   - **Scope**（范围）是可选的，但建议使用（例如：`table`、`toolbar`）。
+   - 主题描述使用中文，简洁明了地说明此次更改
 
-5. Commit Changes
-   - Run the commit command with your message.
-   - Example: `git commit -m "feat(core): initial setup"`
+5. 提交更改
+   - 使用你的提交信息运行提交命令。
+   - 示例：`git commit -m "feat(table): 添加表格列宽调整功能"`
+   
+6. 多行提交信息格式
+   - 第一行：简短的主题（type(scope): 主题）
+   - 空行
+   - 详细说明（每条以 - 开头）
+   - 示例：
+   ```
+   feat(table): 添加列宽调整功能
+   
+   - 在列边界添加可拖拽的调整手柄
+   - 使用 DOM 位置确保手柄对齐
+   - 调整时禁用单元格框选
+   ```
