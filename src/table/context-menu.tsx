@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useSlateStatic } from 'slate-react'
 import { getTableSelectionManager } from './selection'
 import { mergeCells, splitCell, insertTableRow, deleteRow, insertTableColumn, deleteColumn, deleteTable } from './transforms'
@@ -48,7 +49,8 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
     onClose()
   }
   
-  return (
+  // 使用 Portal 将菜单渲染到 body，避免破坏表格结构
+  return createPortal(
     <div
       ref={menuRef}
       className="table-context-menu"
@@ -198,6 +200,7 @@ export function TableContextMenu({ x, y, onClose }: ContextMenuProps) {
           <span>删除表格</span>
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

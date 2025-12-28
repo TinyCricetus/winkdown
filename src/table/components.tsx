@@ -1,6 +1,6 @@
 import React from 'react'
 import { RenderElementProps, useSlateStatic, useSlate, ReactEditor } from 'slate-react'
-import { Path } from 'slate'
+import { Path, Transforms } from 'slate'
 import { TableElement, TableCellElement } from './types'
 import { getColSpan, getRowSpan, getTableAbove } from './queries'
 import { getTableSelectionManager } from './selection'
@@ -21,25 +21,229 @@ import {
 } from 'lucide-react'
 import './table.css'
 
+// 表格上下文，用于共享行高和调整状态
+interface TableContextValue {
+  rowHeights: number[]
+  isResizing: boolean  // 是否正在调整列宽/行高
+}
+
+const TableContext = React.createContext<TableContextValue>({ rowHeights: [], isResizing: false })
+
 /**
  * 表格组件
  */
 export function Table(props: RenderElementProps) {
   const { attributes, children, element } = props
+  const editor = useSlateStatic()
   const table = element as TableElement
   const colSizes = table.colSizes || []
+  const rowHeights = table.rowHeights || []
+  const maxHeight = table.maxHeight
+  const stickyHeader = table.stickyHeader
+  
+  // 列宽调整状态
+  const [resizingCol, setResizingCol] = React.useState<number | null>(null)
+  const [resizingRow, setResizingRow] = React.useState<number | null>(null)
+  const [startX, setStartX] = React.useState(0)
+  const [startY, setStartY] = React.useState(0)
+  const [startWidth, setStartWidth] = React.useState(0)
+  const [startHeight, setStartHeight] = React.useState(0)
+  
+  const tableRef = React.useRef<HTMLTableElement>(null)
+  
+  // 处理列宽调整
+  const handleColResizeStart = (e: React.MouseEvent, colIndex: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setResizingCol(colIndex)
+    setStartX(e.clientX)
+    setStartWidth(colSizes[colIndex] || 150)
+  }
+  
+  // 处理行高调整
+  const handleRowResizeStart = (e: React.MouseEvent, rowIndex: number) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setResizingRow(rowIndex)
+    setStartY(e.clientY)
+    
+    // 从 DOM 获取实际行高
+    let actualHeight = rowHeights[rowIndex] || 40
+    if (tableRef.current) {
+      const rows = tableRef.current.querySelectorAll('tr')
+      if (rows[rowIndex]) {
+        actualHeight = rows[rowIndex].getBoundingClientRect().height
+      }
+    }
+    setStartHeight(actualHeight)
+  }
+  
+  // 全局鼠标移动和松开处理
+  React.useEffect(() => {
+    if (resizingCol === null && resizingRow === null) return
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      if (resizingCol !== null) {
+        const deltaX = e.clientX - startX
+        const newWidth = Math.max(50, startWidth + deltaX)
+        
+        // 更新列宽
+        const tablePath = ReactEditor.findPath(editor, element)
+        const newColSizes = [...colSizes]
+        while (newColSizes.length <= resizingCol) {
+          newColSizes.push(150)
+        }
+        newColSizes[resizingCol] = newWidth
+        
+        Transforms.setNodes(
+          editor,
+          { colSizes: newColSizes } as Partial<TableElement>,
+          { at: tablePath }
+        )
+      }
+      
+      if (resizingRow !== null) {
+        const deltaY = e.clientY - startY
+        const newHeight = Math.max(24, startHeight + deltaY)
+        
+        // 更新行高
+        const tablePath = ReactEditor.findPath(editor, element)
+        const newRowHeights = [...rowHeights]
+        while (newRowHeights.length <= resizingRow) {
+          newRowHeights.push(40)
+        }
+        newRowHeights[resizingRow] = newHeight
+        
+        Transforms.setNodes(
+          editor,
+          { rowHeights: newRowHeights } as Partial<TableElement>,
+          { at: tablePath }
+        )
+      }
+    }
+    
+    const handleMouseUp = () => {
+      setResizingCol(null)
+      setResizingRow(null)
+    }
+    
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [resizingCol, resizingRow, startX, startY, startWidth, startHeight, colSizes, rowHeights, editor, element])
+  
+  // 计算表格总宽度
+  const totalWidth = colSizes.reduce((sum, w) => sum + (w || 150), 0)
+
+  // 渲染行高调整手柄
+  const rowCount = (element as TableElement).children.length
+  
+  // 实际行底部位置（从 DOM 获取）
+  const [actualRowBottoms, setActualRowBottoms] = React.useState<number[]>([])
+  // 实际列右边界位置（从 DOM 获取）
+  const [actualColRights, setActualColRights] = React.useState<number[]>([])
+  
+  // 使用 useLayoutEffect 获取实际渲染后的位置
+  React.useLayoutEffect(() => {
+    if (!tableRef.current) return
+    
+    const tableRect = tableRef.current.getBoundingClientRect()
+    
+    // 获取行位置
+    const rows = tableRef.current.querySelectorAll('tr')
+    const bottoms: number[] = []
+    rows.forEach((row) => {
+      const rect = row.getBoundingClientRect()
+      bottoms.push(rect.bottom - tableRect.top)
+    })
+    setActualRowBottoms(bottoms)
+    
+    // 获取列位置（从第一行的单元格获取）
+    const firstRow = tableRef.current.querySelector('tr')
+    if (firstRow) {
+      const cells = firstRow.querySelectorAll('td, th')
+      const rights: number[] = []
+      cells.forEach((cell) => {
+        const rect = cell.getBoundingClientRect()
+        rights.push(rect.right - tableRect.left)
+      })
+      setActualColRights(rights)
+    }
+  }, [rowHeights, colSizes, rowCount, children])
+  
+  // 是否正在调整大小
+  const isResizing = resizingCol !== null || resizingRow !== null
   
   return (
-    <div {...attributes} contentEditable={false} className="slate-table-wrapper">
-      <table className="slate-table">
-        <colgroup>
-          {colSizes.map((width, index) => (
-            <col key={index} style={{ width: `${width}px` }} />
-          ))}
-        </colgroup>
-        <tbody contentEditable={true} suppressContentEditableWarning={true}>{children}</tbody>
-      </table>
-    </div>
+    <TableContext.Provider value={{ rowHeights, isResizing }}>
+      <div 
+        {...attributes} 
+        contentEditable={false} 
+        className={`slate-table-wrapper ${maxHeight ? 'has-scroll' : ''} ${stickyHeader ? 'sticky-header' : ''} ${resizingCol !== null ? 'resizing' : ''} ${resizingRow !== null ? 'resizing-row' : ''}`}
+        style={{
+          maxHeight: maxHeight ? `${maxHeight}px` : undefined,
+        }}
+      >
+        {/* 列宽调整指示器 */}
+        {resizingCol !== null && (
+          <div className="col-resize-indicator" />
+        )}
+        
+        {/* 行高调整指示器 */}
+        {resizingRow !== null && (
+          <div className="row-resize-indicator" />
+        )}
+        
+        <div className="table-scroll-container">
+          <table ref={tableRef} className="slate-table" style={{ width: `${totalWidth}px` }}>
+            <colgroup>
+              {colSizes.map((width, index) => (
+                <col key={index} style={{ width: `${width || 150}px` }} />
+              ))}
+            </colgroup>
+            <tbody contentEditable={true} suppressContentEditableWarning={true}>
+              {children}
+            </tbody>
+          </table>
+          
+          {/* 列宽调整手柄 */}
+          <div className="col-resize-handles">
+            {colSizes.map((_, index) => {
+              // 使用实际的 DOM 位置，如果可用的话
+              const left = actualColRights[index] ?? colSizes.slice(0, index + 1).reduce((sum, w) => sum + (w || 150), 0)
+              return (
+                <div
+                  key={index}
+                  className={`col-resize-handle ${resizingCol === index ? 'active' : ''}`}
+                  style={{ left: `${left - 3}px` }}
+                  onMouseDown={(e) => handleColResizeStart(e, index)}
+                />
+              )
+            })}
+          </div>
+          
+          {/* 行高调整手柄 */}
+          <div className="row-resize-handles">
+            {Array.from({ length: rowCount }, (_, index) => {
+              // 使用实际的 DOM 位置，如果可用的话
+              const top = actualRowBottoms[index] ?? ((index + 1) * 40)
+              return (
+                <div
+                  key={index}
+                  className={`row-resize-handle ${resizingRow === index ? 'active' : ''}`}
+                  style={{ top: `${top - 4}px` }}
+                  onMouseDown={(e) => handleRowResizeStart(e, index)}
+                />
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </TableContext.Provider>
   )
 }
 
@@ -47,10 +251,27 @@ export function Table(props: RenderElementProps) {
  * 表格行组件
  */
 export function TableRow(props: RenderElementProps) {
-  const { attributes, children } = props
+  const { attributes, children, element } = props
+  const editor = useSlateStatic()
+  const { rowHeights } = React.useContext(TableContext)
+  
+  // 获取当前行的索引
+  let rowIndex = 0
+  try {
+    const path = ReactEditor.findPath(editor, element)
+    rowIndex = path[path.length - 1]
+  } catch (e) {
+    // 忽略错误
+  }
+  
+  const height = rowHeights[rowIndex]
   
   return (
-    <tr {...attributes} className="slate-table-row">
+    <tr 
+      {...attributes} 
+      className="slate-table-row"
+      style={{ height: height ? `${height}px` : undefined }}
+    >
       {children}
     </tr>
   )
@@ -64,6 +285,7 @@ export function TableCell(props: RenderElementProps) {
   const editor = useSlateStatic()
   const cell = element as TableCellElement
   const [contextMenu, setContextMenu] = React.useState<{ x: number; y: number } | null>(null)
+  const { isResizing } = React.useContext(TableContext)
   
   const colSpan = getColSpan(cell)
   const rowSpan = getRowSpan(cell)
@@ -92,6 +314,9 @@ export function TableCell(props: RenderElementProps) {
     // 只处理左键
     if (e.button !== 0) return
     
+    // 如果正在调整大小，禁用框选
+    if (isResizing) return
+    
     const selectionManager = getTableSelectionManager()
     const path = ReactEditor.findPath(editor, element)
     
@@ -108,6 +333,9 @@ export function TableCell(props: RenderElementProps) {
   
   // 处理鼠标进入（更新框选范围）
   const handleMouseEnter = (e: React.MouseEvent) => {
+    // 如果正在调整大小，禁用框选
+    if (isResizing) return
+    
     const selectionManager = getTableSelectionManager()
     
     // 只在按住鼠标左键时更新选区

@@ -32,7 +32,7 @@ function createRow(colCount: number): TableRowElement {
  * 插入表格
  */
 export function insertTable(editor: Editor, options: InsertTableOptions = {}) {
-  const { rowCount = 3, colCount = 3, colWidth = 150 } = options
+  const { rowCount = 3, colCount = 3, colWidth = 150, rowHeight = 40 } = options
   
   const rows: TableRowElement[] = []
   for (let i = 0; i < rowCount; i++) {
@@ -40,10 +40,12 @@ export function insertTable(editor: Editor, options: InsertTableOptions = {}) {
   }
   
   const colSizes = Array(colCount).fill(colWidth)
+  const rowHeights = Array(rowCount).fill(rowHeight)
   
   const table: TableElement = {
     type: 'table',
     colSizes,
+    rowHeights,
     children: rows
   }
   
@@ -78,13 +80,28 @@ export function insertTableRow(editor: Editor, options: { above?: boolean } = {}
   const table = getTableAbove(editor)
   if (!table) return
   
-  const [tableNode] = table
-  const colCount = getTableColumnCount(tableNode as TableElement)
+  const [tableNode, tablePath] = table
+  const tableElement = tableNode as TableElement
+  const colCount = getTableColumnCount(tableElement)
   
   const newRow = createRow(colCount)
+  const rowIndex = rowPath[rowPath.length - 1]
   const insertPath = options.above ? rowPath : Path.next(rowPath)
+  const insertIndex = options.above ? rowIndex : rowIndex + 1
   
   Transforms.insertNodes(editor, newRow, { at: insertPath })
+  
+  // 更新行高数组
+  if (tableElement.rowHeights) {
+    const newRowHeights = [...tableElement.rowHeights]
+    newRowHeights.splice(insertIndex, 0, 40) // 默认行高
+    
+    Transforms.setNodes(
+      editor,
+      { rowHeights: newRowHeights } as Partial<TableElement>,
+      { at: tablePath }
+    )
+  }
 }
 
 /**
@@ -98,7 +115,8 @@ export function deleteRow(editor: Editor) {
   if (!table) return
   
   const [tableNode, tablePath] = table
-  const rowCount = (tableNode as TableElement).children.length
+  const tableElement = tableNode as TableElement
+  const rowCount = tableElement.children.length
   
   // 至少保留一行
   if (rowCount <= 1) {
@@ -106,7 +124,21 @@ export function deleteRow(editor: Editor) {
   }
   
   const [, rowPath] = row
+  const rowIndex = rowPath[rowPath.length - 1]
+  
   Transforms.removeNodes(editor, { at: rowPath })
+  
+  // 更新行高数组
+  if (tableElement.rowHeights) {
+    const newRowHeights = [...tableElement.rowHeights]
+    newRowHeights.splice(rowIndex, 1)
+    
+    Transforms.setNodes(
+      editor,
+      { rowHeights: newRowHeights } as Partial<TableElement>,
+      { at: tablePath }
+    )
+  }
 }
 
 /**
@@ -376,4 +408,65 @@ export function setCellAlign(editor: Editor, align: 'left' | 'center' | 'right')
       { at: cellPath }
     )
   }
+}
+
+/**
+ * 设置行高
+ */
+export function setRowHeight(editor: Editor, rowIndex: number, height: number) {
+  const table = getTableAbove(editor)
+  if (!table) return
+  
+  const [tableNode, tablePath] = table
+  const tableElement = tableNode as TableElement
+  
+  // 更新行高数组
+  const currentRowHeights = tableElement.rowHeights || []
+  const newRowHeights = [...currentRowHeights]
+  
+  // 确保数组长度足够
+  while (newRowHeights.length <= rowIndex) {
+    newRowHeights.push(40) // 默认行高
+  }
+  
+  newRowHeights[rowIndex] = Math.max(height, 24) // 最小行高 24px
+  
+  Transforms.setNodes(
+    editor,
+    { rowHeights: newRowHeights } as Partial<TableElement>,
+    { at: tablePath }
+  )
+}
+
+/**
+ * 设置表格最大高度（用于启用滚动）
+ */
+export function setTableMaxHeight(editor: Editor, maxHeight: number | undefined) {
+  const table = getTableAbove(editor)
+  if (!table) return
+  
+  const [, tablePath] = table
+  
+  Transforms.setNodes(
+    editor,
+    { maxHeight } as Partial<TableElement>,
+    { at: tablePath }
+  )
+}
+
+/**
+ * 切换固定表头
+ */
+export function toggleStickyHeader(editor: Editor) {
+  const table = getTableAbove(editor)
+  if (!table) return
+  
+  const [tableNode, tablePath] = table
+  const tableElement = tableNode as TableElement
+  
+  Transforms.setNodes(
+    editor,
+    { stickyHeader: !tableElement.stickyHeader } as Partial<TableElement>,
+    { at: tablePath }
+  )
 }

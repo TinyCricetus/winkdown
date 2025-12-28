@@ -2,7 +2,7 @@
 .slate-table {
   width: auto;
   border-collapse: collapse;
-  margin: 20px 0;
+  margin: 0;
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border-radius: 4px;
@@ -168,10 +168,170 @@
 
 /* 表格容器 */
 .slate-table-wrapper {
-  overflow-x: auto;
+  position: relative;
   margin: 20px 0;
   width: fit-content;
-  max-width: 100%; /* 防止超出屏幕宽度时无法滚动 */
+  max-width: 100%;
+}
+
+/* 启用滚动时的表格容器 */
+.slate-table-wrapper.has-scroll {
+  overflow: hidden;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+}
+
+.slate-table-wrapper.has-scroll .table-scroll-container {
+  overflow: auto;
+  max-height: inherit;
+}
+
+/* 固定表头样式 */
+.slate-table-wrapper.sticky-header .slate-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.slate-table-wrapper.sticky-header .slate-table-row:first-child .slate-table-cell {
+  font-weight: 600;
+  background: #f8f9fa;
+}
+
+/* 表格滚动容器 */
+.table-scroll-container {
+  position: relative;
+  overflow-x: auto;
+}
+
+/* 列宽调整手柄容器 */
+.col-resize-handles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* 列宽调整手柄 */
+.col-resize-handle {
+  position: absolute;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  pointer-events: auto;
+  background: transparent;
+  transition: background-color 0.2s;
+  z-index: 20;
+}
+
+.col-resize-handle:hover,
+.col-resize-handle.active {
+  background: linear-gradient(180deg, rgba(102, 126, 234, 0.4), rgba(102, 126, 234, 0.8));
+}
+
+.col-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 24px;
+  background: #667eea;
+  border-radius: 1px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.col-resize-handle:hover::before,
+.col-resize-handle.active::before {
+  opacity: 1;
+}
+
+/* 行高调整手柄容器 */
+.row-resize-handles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 15;
+}
+
+/* 行高调整手柄 */
+.row-resize-handle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 8px;
+  cursor: row-resize;
+  pointer-events: auto;
+  background: transparent;
+  transition: background-color 0.2s;
+}
+
+.row-resize-handle:hover,
+.row-resize-handle.active {
+  background: linear-gradient(180deg, transparent 0%, rgba(102, 126, 234, 0.3) 40%, rgba(102, 126, 234, 0.6) 50%, rgba(102, 126, 234, 0.3) 60%, transparent 100%);
+}
+
+.row-resize-handle::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 40px;
+  height: 3px;
+  background: #667eea;
+  border-radius: 2px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.row-resize-handle:hover::before,
+.row-resize-handle.active::before {
+  opacity: 1;
+}
+
+/* 调整指示器（拖动时显示的线） */
+.col-resize-indicator {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #667eea;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.row-resize-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: #667eea;
+  z-index: 100;
+  pointer-events: none;
+}
+
+/* 拖动时禁用文本选择 */
+.slate-table-wrapper.resizing {
+  user-select: none;
+}
+
+.slate-table-wrapper.resizing * {
+  cursor: col-resize !important;
+}
+
+.slate-table-wrapper.resizing-row * {
+  cursor: row-resize !important;
 }
 
 /* 响应式设计 */
@@ -246,4 +406,73 @@
 .toolbar-toggle:hover {
   background: rgba(102, 126, 234, 0.2) !important;
   border-color: rgba(102, 126, 234, 0.5) !important;
+}
+
+/* 自定义滚动条样式 */
+.table-scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table-scroll-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.table-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5569e0, #6a4190);
+}
+
+.table-scroll-container::-webkit-scrollbar-corner {
+  background: #f1f1f1;
+}
+
+/* 固定高度时显示滚动提示 */
+.slate-table-wrapper.has-scroll::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 24px;
+  background: linear-gradient(transparent, rgba(255, 255, 255, 0.9));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.slate-table-wrapper.has-scroll:hover::after {
+  opacity: 1;
+}
+
+/* 表格调整时的视觉反馈 */
+.slate-table-wrapper.resizing .slate-table,
+.slate-table-wrapper.resizing-row .slate-table {
+  outline: 2px dashed rgba(102, 126, 234, 0.3);
+  outline-offset: 2px;
+}
+
+/* 悬停时显示调整手柄提示 */
+.slate-table-wrapper:hover .col-resize-handles,
+.slate-table-wrapper:hover .row-resize-handles {
+  opacity: 1;
+}
+
+.col-resize-handles,
+.row-resize-handles {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.col-resize-handles:hover,
+.row-resize-handles:hover,
+.slate-table-wrapper.resizing .col-resize-handles,
+.slate-table-wrapper.resizing-row .row-resize-handles {
+  opacity: 1;
 }

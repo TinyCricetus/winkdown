@@ -11,13 +11,17 @@ export interface BorderStyle {
 export interface TableElement extends BaseElement {
   type: 'table'
   colSizes?: number[]     // 列宽数组
+  rowHeights?: number[]   // 行高数组
   marginLeft?: number     // 左边距
+  maxHeight?: number      // 表格最大高度（用于滚动）
+  stickyHeader?: boolean  // 是否固定表头
 }
 
 // 表格行元素
 export interface TableRowElement extends BaseElement {
   type: 'table-row'
-  size?: number          // 行高
+  size?: number          // 行高（兼容旧属性）
+  height?: number        // 行高
 }
 
 // 表格单元格元素
@@ -40,6 +44,7 @@ export interface InsertTableOptions {
   rowCount?: number      // 行数，默认3
   colCount?: number      // 列数，默认3
   colWidth?: number      // 默认列宽，默认150
+  rowHeight?: number     // 默认行高，默认40
 }
 
 // 单元格位置
