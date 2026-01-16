@@ -7,4 +7,4 @@ dist
 # 忽略 .cursor 目录下的其他文件，但保留 rules 目录中的规则文件
 .cursor
 .plate
-# .agent
+.agent
